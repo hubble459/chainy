@@ -1,4 +1,4 @@
-# pranga-ts
+# chainy
 
 To install dependencies:
 

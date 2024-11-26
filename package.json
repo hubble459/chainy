@@ -1,5 +1,5 @@
 {
-  "name": "pranga-ts",
+  "name": "chainy",
   "module": "src/index.ts",
   "type": "module",
   "devDependencies": {
