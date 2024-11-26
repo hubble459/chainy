@@ -104,6 +104,6 @@ describe('chain', () => {
         expect(chain
             .do('select', '#does-not-exist')
             .do('text')
-            .run.bind(chain, $)).toThrow('Failed');
+            .run.bind(chain, $)).toThrow('All actions in the chain failed');
     });
 });

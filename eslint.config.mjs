@@ -28,17 +28,17 @@ export default [
     {
         rules: {
             'curly': ['error', 'multi-line'],
-            'no-else-return': ['error']
-        }
+            'no-else-return': ['error'],
+        },
     },
     {
         rules: {
-            '@stylistic/comma-dangle': ['error', 'only-multiline'],
+            '@stylistic/brace-style': ['error', '1tbs'],
+            '@stylistic/comma-dangle': ['error', 'always-multiline'],
             '@stylistic/indent': ['error', 4],
             '@stylistic/no-trailing-spaces': 'error',
             '@stylistic/quotes': ['error', 'single'],
             '@stylistic/semi': ['error', 'always'],
-            '@stylistic/brace-style': ['error', '1tbs']
         },
     },
     {
@@ -54,9 +54,11 @@ export default [
     },
     {
         ignores: [
+            'node_modules',
             'dist',
             'public',
             'builds',
+            'out',
         ],
     },
 ];

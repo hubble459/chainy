@@ -69,42 +69,55 @@ export class Chain<Value = unknown, Previous = unknown> {
     private execute(action: typeof this.items[number], $: JQueryStatic, value: unknown) {
         this._debug_indent++;
 
-        // Should run actions and return the first pass
         for (const try_action of action) {
             try {
-                let v = undefined;
+                let result: unknown;
+
+                // Check if the action is a chain
                 if (try_action instanceof Chain) {
-                    v = try_action.run($, value);
+                    result = try_action.run($, value);
                 } else {
                     const executor = actions[try_action.action];
 
+                    // Handle array values if executor doesn't support arrays
                     if (Array.isArray(value) && !executor.take_array) {
                         for (let i = 0; i < value.length; i++) {
                             value[i] = this.execute([try_action], $, value[i]);
                         }
-
                         this._debug_indent--;
-
                         return value;
                     }
 
-                    v = executor.run($, value, try_action.options);
+                    // Run the executor
+                    result = executor.run($, value, try_action.options);
                 }
-                if (v) {
-                    console.debug(`${this.debug_indent}- ${try_action instanceof Chain ? 'chain' : try_action.action} returned "${Array.isArray(v) ? 'array' : typeof v}"; continuing`);
-                    this._debug_indent--;
 
-                    return v;
+                // Log success and return result if valid
+                if (result !== undefined) {
+                    console.debug(
+                        `${this.debug_indent}- ${
+                            try_action instanceof Chain ? 'chain' : try_action.action
+                        } returned "${Array.isArray(result) ? 'array' : typeof result}"; continuing`
+                    );
+                    this._debug_indent--;
+                    return result;
                 }
-            } catch (e) {
-                if (e instanceof Error) {
-                    console.debug(`${this.debug_indent}- ${try_action instanceof Chain ? 'chain' : try_action.action} returned "${e.message}"`);
+            } catch (error) {
+                // Log errors gracefully
+                if (error instanceof Error) {
+                    console.debug(
+                        `${this.debug_indent}- ${
+                            try_action instanceof Chain ? 'chain' : try_action.action
+                        } failed with error: "${error.message}"`
+                    );
                 }
-            };
+            }
         }
 
-        // Failed
-        throw new Error('Failed');
+        this._debug_indent--;
+
+        // Throw if no action succeeded
+        throw new Error('All actions in the chain failed');
     }
 
     public run($: JQueryStatic, value: unknown = undefined): Value {
