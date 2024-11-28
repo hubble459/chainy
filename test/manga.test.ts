@@ -10,43 +10,53 @@ describe('manga', () => {
     const $ = jQueryFactory(window, true);
 
     test('select > text', () => {
-        const text_trim = (chain: Chain<JQuery[] | JQuery>) => chain.do('text').do('trim');
+        const text_trim = (chain: Chain<JQuery | JQuery[]>) => chain.do('text').do('trim');
 
-        const manga = {
+        const manga_builder = {
             title: new Chain()
                 .do('select', 'h1:first')
                 .do('first')
-                .do(text_trim)
-                .run($),
+                .do(text_trim),
             alternative_titles: new Chain()
                 .do('select', 'h2.story-alternative')
                 .do('first')
                 .do(text_trim)
                 .do('regex', { regex: /^Alternative : / })
                 .do('split', { separator: /\w*;[\w\n]*/ })
-                .do('trim')
-                .run($),
+                .do('trim'),
             description: new Chain()
                 .do('select', 'meta[name="description"]')
                 .do('first')
                 .do('attribute', 'content')
-                .do('trim')
-                .run($),
+                .do('trim'),
             genres: new Chain()
                 .do('select', 'ul.manga-info-text li:nth-child(7) a')
-                .do(text_trim)
-                .run($),
+                .do(text_trim),
             authors: new Chain()
                 .do('select', 'ul.manga-info-text li:nth-child(2) a')
-                .do(text_trim)
-                .run($),
+                .do(text_trim),
             status: new Chain()
                 .do('select', 'ul.manga-info-text li:nth-child(3)')
                 .do('first')
                 .do(text_trim)
                 .do('regex', { regex: /^Status :\s*/ })
-                .run($),
+                .do(chain => chain.do('matches', /on-?going/ig).do('value', 'Ongoing'))
+                .or(chain => chain.do('matches', /drop|stop|unfinished/ig).do('value', 'Unfinished'))
+                .or(chain => chain.do('matches', /finished/ig).do('value', 'Finished'))
+                .or(chain => chain.do('value', 'Ongoing')),
+            is_ongoing: new Chain()
+                .do('select', 'ul.manga-info-text li:nth-child(3)')
+                .do('first')
+                .do(text_trim)
+                .do('regex', { regex: /^Status :\s*/ })
+                .do(chain => chain.do('matches', /on-?going/ig).do('value', 'Ongoing'))
+                .or(chain => chain.do('matches', /drop|stop|unfinished/ig).do('value', 'Unfinished'))
+                .or(chain => chain.do('matches', /finished/ig).do('value', 'Finished'))
+                .or(chain => chain.do('value', 'Ongoing'))
+                .do('matches', /Ongoing/),
         };
+
+        const manga = Object.fromEntries(Object.entries(manga_builder).map(([key, chain]) => [key, chain.run($)]))
 
         expect(manga).toEqual({
             title: 'Lord of Destiny Wheel',
@@ -55,6 +65,59 @@ describe('manga', () => {
             genres: ['Action', 'Adventure', 'Drama', 'Fantasy', 'Shounen'],
             authors: ['iCiyuan', '动漫', 'Armode Culture'],
             status: 'Ongoing',
+            is_ongoing: true,
         });
     });
+
+    test('json', () => {
+        const text_trim = (chain: Chain<JQuery | JQuery[]>) => chain.do('text').do('trim');
+
+        const manga_builder = {
+            title: new Chain()
+                .do('select', 'h1:first')
+                .do('first')
+                .do(text_trim),
+            alternative_titles: new Chain()
+                .do('select', 'h2.story-alternative')
+                .do('first')
+                .do(text_trim)
+                .do('regex', { regex: /^Alternative : / })
+                .do('split', { separator: /\w*;[\w\n]*/ })
+                .do('trim'),
+            description: new Chain()
+                .do('select', 'meta[name="description"]')
+                .do('first')
+                .do('attribute', 'content')
+                .do('trim'),
+            genres: new Chain()
+                .do('select', 'ul.manga-info-text li:nth-child(7) a')
+                .do(text_trim),
+            authors: new Chain()
+                .do('select', 'ul.manga-info-text li:nth-child(2) a')
+                .do(text_trim),
+            status: new Chain()
+                .do('select', 'ul.manga-info-text li:nth-child(3)')
+                .do('first')
+                .do(text_trim)
+                .do('regex', { regex: /^Status :\s*/ })
+                .do(chain => chain.do('matches', /on-?going/ig).do('value', 'Ongoing'))
+                .or(chain => chain.do('matches', /drop|stop|unfinished/ig).do('value', 'Unfinished'))
+                .or(chain => chain.do('matches', /finished/ig).do('value', 'Finished'))
+                .or(chain => chain.do('value', 'Ongoing')),
+            is_ongoing: new Chain()
+                .do('select', 'ul.manga-info-text li:nth-child(3)')
+                .do('first')
+                .do(text_trim)
+                .do('regex', { regex: /^Status :\s*/ })
+                .do(chain => chain.do('matches', /on-?going/ig).do('value', 'Ongoing'))
+                .or(chain => chain.do('matches', /drop|stop|unfinished/ig).do('value', 'Unfinished'))
+                .or(chain => chain.do('matches', /finished/ig).do('value', 'Finished'))
+                .or(chain => chain.do('value', 'Ongoing'))
+                .do('matches', /Ongoing/),
+        };
+
+        const json = JSON.stringify(manga_builder);
+
+        console.log(json);
+    })
 });

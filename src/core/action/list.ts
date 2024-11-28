@@ -1,7 +1,11 @@
 import { isJQuery } from '../../util';
 import { action } from './action';
 
-export const list = action('list', ($, value) => {
+type Return<Value> = Value extends unknown
+    ? Value[]
+    : never;
+
+export const list = action('list', ($, value): Return<typeof value> => {
     let array: typeof value[];
 
     if (isJQuery(value)) {
@@ -12,5 +16,5 @@ export const list = action('list', ($, value) => {
         array = [value];
     }
 
-    return array;
+    return array as Return<typeof value>;
 });

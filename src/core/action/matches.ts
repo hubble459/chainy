@@ -2,13 +2,17 @@ import { UnprocessableError } from '../../error/unprocessable_error';
 import { action } from './action';
 
 type Return<Value> = Value extends string
-    ? string[]
+    ? true
     : never;
 
-export const split = action('split', ($, value, options: { separator: string | RegExp, limit?: number }): Return<typeof value> => {
+export const matches = action('matches', ($, value, regex: RegExp): Return<typeof value> => {
     if (typeof value !== 'string') {
         throw new UnprocessableError();
     }
 
-    return value.split(options.separator, options.limit) as Return<typeof value>;
+    if (!regex.test(value)) {
+        throw new Error('Does not match');
+    }
+
+    return true as Return<typeof value>;
 });

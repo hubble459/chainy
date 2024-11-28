@@ -11,6 +11,25 @@ describe('serialize', () => {
             .do('text')
             .toJSON();
 
-        expect(result).toBe('{"chain":[[{"action":"select","options":"h1"}],[{"action":"first"}],[{"action":"text"}]]}');
+        expect(result).toEqual({
+            chain: [
+                [
+                    {
+                        action: "select",
+                        options: "h1",
+                    }
+                ], [
+                    {
+                        action: "first",
+                        options: undefined,
+                    }
+                ], [
+                    {
+                        action: "text",
+                        options: undefined,
+                    }
+                ]
+            ],
+        });
     });
 });
