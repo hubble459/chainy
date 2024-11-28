@@ -1,5 +1,5 @@
-import { UnprocessableError } from '../../error/unprocessable_error';
-import { action } from './action';
+import {UnprocessableError} from '../../error/unprocessable_error';
+import {action} from './action';
 
 type Return<Value> = Value extends unknown[]
     ? FlatArray<Value, 1>

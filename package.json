@@ -16,7 +16,8 @@
   },
   "scripts": {
     "start": "bun src/index.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "lint": "bun eslint"
   },
   "dependencies": {
     "jquery": "^3.7.1",

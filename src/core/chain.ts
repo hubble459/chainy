@@ -2,155 +2,95 @@ import {actions, type GetType} from './action';
 import type {Action} from './action/action';
 
 type Actions = typeof actions;
-type ActionOptions<A extends Actions[keyof Actions]> = A['run'] extends Action<infer Options> ? Options : never;
-
-type Propagate<Value, K extends keyof Actions> = Value extends unknown[]
-    ? Actions[K]['take_array'] extends true ? GetType<K, Value> : GetType<K, Value[number]>[]
-    : GetType<K, Value>;
-
-type PossibleActions<Value = any> = {
-    [K in keyof Actions as GetType<K, Value extends unknown[] ? Actions[K]['take_array'] extends true
-        ? Value
-        : Value[keyof Value] : Value> extends never ? never : K]: K
-};
-
-type ActionsWithOptions<Value> = {
-    [K in keyof PossibleActions<Value> as ActionOptions<Actions[K]> extends undefined
-        ? never
-        : K]: ActionOptions<Actions[K]>
-};
-type ActionsWithoutOptions<Value> = {
-    [K in keyof PossibleActions<Value> as undefined extends ActionOptions<Actions[K]> ? K : never]: K
-};
-
-interface ChainAction {
-    action: keyof Actions
-    options: any
+type ActionOptions<K extends keyof Actions> = Actions[K]['run'] extends Action<infer Options> ? Options : never;
+type PossibleActions<Output = any> = {[K in keyof Actions as GetType<K, Output extends unknown[] ? Actions[K]['take_array'] extends true ? Output : Output[keyof Output] : Output> extends never ? never : K]: K};
+type ActionsWithOptions<Output> = {[K in keyof PossibleActions<Output> as ActionOptions<K> extends undefined ? never : K]: ActionOptions<K>};
+type ActionsWithoutOptions<Output> = {[K in keyof PossibleActions<Output> as undefined extends ActionOptions<K> ? K : never]: K};
+type Propagate<Output, K extends keyof Actions> = Output extends unknown[] ? Actions[K]['take_array'] extends true ? GetType<K, Output> : GetType<K, Output[number]>[] : GetType<K, Output>;
+type ChainCallback<Values extends unknown[], Output extends Chain> = (chain: Chain<Last<Values>, Values>) => Output;
+type Last<Values extends unknown[]> = Values extends [...any, infer Last] ? Last : unknown;
+interface ChainAction<K extends keyof Actions = keyof Actions> {
+    action: K;
+    options: ActionOptions<K>;
 }
 
-type ChainCallback<Input, Out extends Chain> = (chain: Chain<Input>) => Out;
+export class Chain<Input = unknown, Values extends unknown[] = [...any]> {
+    private readonly items: (ChainAction | Chain)[] = [];
 
-export class Chain<Value = unknown, Previous = unknown> {
-    private readonly items: (ChainAction | Chain | (ChainAction | Chain)[])[] = [];
-
-    public do<V>(chain: ChainCallback<Value, Chain<V, Previous>>): Chain<V, Previous>;
-    public do<K extends keyof ActionsWithoutOptions<Value>>(action: K): Chain<Propagate<Value, K>, Value>;
-    public do<K extends keyof ActionsWithOptions<Value>>(action: K, options: ActionsWithOptions<Value>[K]): Chain<Propagate<Value, K>, Value>;
-    public do<K extends keyof Actions>(action: K | ChainCallback<unknown, Chain>, options?: ActionOptions<Actions[K]>): Chain<Propagate<Value, K>, Value> {
+    public add<Output, AddValues extends unknown[]>(chain: ChainCallback<Values, Chain<Output, AddValues>>): Chain<Input, [...Values, ...AddValues]>;
+    public add<K extends keyof ActionsWithoutOptions<Last<Values>>>(action: K): Chain<Input, [...Values, Propagate<Last<Values>, K>]>;
+    public add<K extends keyof ActionsWithOptions<Last<Values>>>(action: K, options: ActionOptions<K>): Chain<Input, [...Values, Propagate<Last<Values>, K>]>;
+    public add(action: keyof Actions | ChainCallback<Values, Chain>, options?: any): any {
         if (typeof action === 'function') {
-            this.items.push([action(new Chain())]);
+            this.items.push(...(action(new Chain())).items);
         } else {
-            this.items.push([{action, options}]);
+            this.items.push({action, options});
         }
 
-        return this as any;
+        return this;
     }
 
-    public or<V, P>(chain: ChainCallback<Previous, Chain<V, P>>): Chain<V | Value, P | Previous>;
-    public or<K extends keyof Actions>(action: K, options: ActionOptions<Actions[K]>): Chain<GetType<K, Previous> | Value, Value>;
-    public or<K extends keyof Actions>(action: K | ChainCallback<unknown, Chain>, options?: ActionOptions<Actions[K]>): Chain<GetType<K, Previous> | Value, Value> {
-        const index = this.items.length - 1;
-        let last = this.items[index];
+    public or<Output, OrValues extends unknown[]>(chain: ChainCallback<Values, Chain<Output, OrValues>>): Chain<Input, Values extends [...infer Before, infer LastValue] ? [...Before, LastValue | Last<OrValues>] : never>;
+    public or(closure: any): any {
+        this.items.push(closure(new Chain()));
 
-        if (!last) {
-            throw new Error('Can not use "or" on empty chain');
-        }
-
-        if (!Array.isArray(last)) {
-            this.items[index] = last = [last];
-        }
-
-        if (typeof action === 'function') {
-            last.push(action(new Chain()));
-        } else {
-            last.push({action, options});
-        }
-
-        return this as any;
+        return this;
     }
 
-    private execute(action: (ChainAction | Chain)[], $: JQueryStatic, value: unknown) {
-        for (const try_action of action) {
+    public execute(input: JQueryStatic, value?: Values[0]): Last<Values> {
+        for (let i = 0; i < this.items.length; i++) {
+            const item = this.items[i]!;
+            const next = this.items[i + 1];
+
+            const allowed_to_fail = next instanceof Chain;
+
             try {
-                let result: unknown;
-
-                // Check if the action is a chain
-                if (try_action instanceof Chain) {
-                    result = try_action.run($, value);
+                if (item instanceof Chain) {
+                    value = item.execute(input, value);
                 } else {
-                    const executor = actions[try_action.action];
-
-                    // Handle array values if executor doesn't support arrays
-                    if (Array.isArray(value) && !executor.take_array) {
-                        for (let i = 0; i < value.length; i++) {
-                            value[i] = this.execute([try_action], $, value[i]);
+                    const action = actions[item.action];
+                    if (Array.isArray(value)) {
+                        if (action.take_array) {
+                            value = action.run(input, value, item.options);
+                        } else {
+                            value = value.map(v => action.run(input, v, item.options));
                         }
-                        return value;
+                    } else {
+                        value = action.run(input, value, item.options);
                     }
-
-                    // Run the executor
-                    result = executor.run($, value, try_action.options);
                 }
-
-                // Log success and return result if valid
-                if (result !== undefined) {
-                    console.debug(`- ${try_action instanceof Chain ? 'chain' : try_action.action
-                    } returned "${Array.isArray(result) ? 'array' : typeof result}"; continuing`);
-                    return result;
-                }
-            } catch (error) {
-                // Log errors gracefully
-                if (error instanceof Error) {
-                    console.debug(`- ${try_action instanceof Chain ? 'chain' : try_action.action
-                    } failed with error: "${error.message}"`);
+                console.log(`Action (${'action' in item ? item.action : item.toString()}) got value ${JSON.stringify(value)}`);
+            } catch (e) {
+                if (allowed_to_fail) {
+                    console.log(`Failed action (${'action' in item ? item.action : item.toString()}) but continuing to next`);
+                } else {
+                    throw e;
                 }
             }
         }
 
-        // Throw if no action succeeded
-        throw new Error('All actions in the chain failed');
+        return value as any;
     }
 
-    public run($: JQueryStatic, value: unknown = undefined): Value {
-        return this.items.reduce((value, actions) => {
-            if (!Array.isArray(actions)) {
-                actions = [actions];
-            }
-            return this.execute(actions, $, value);
-        }, value) as any;
+    public toArray(): any[] {
+        return this.items.map(item => 'toArray' in item ? item.toArray() : item);
     }
 
-    public toJSON() {
+
+    public toString(): string {
         if (!('toJSON' in RegExp.prototype)) {
             // @ts-expect-error toJSON does not exist on RegExp
             // eslint-disable-next-line @typescript-eslint/unbound-method
             RegExp.prototype.toJSON = RegExp.prototype.toString;
         }
 
-        if (this.items.length === 1) {
-            const item = this.items[0];
-            if (Array.isArray(item) && item.length === 1) {
-                return item[0];
+        return 'chain:' + this.items.map((v) => {
+            if (v instanceof Chain) {
+                return v.toString();
+            } else if (v.options) {
+                return v.action + '(' + JSON.stringify(v.options) + ')';
             }
-
-            return {or: item};
-        }
-
-        return {
-            chain: this.items.map((item) => {
-                if (Array.isArray(item)) {
-                    if (item.length === 1) {
-                        return item[0];
-                    }
-                    return {or: item};
-                }
-
-                return item;
-            }),
-        };
-    }
-
-    public toString() {
-        return JSON.stringify(this);
+            return v.action;
+        }).join('>>');
     }
 }

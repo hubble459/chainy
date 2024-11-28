@@ -1,5 +1,5 @@
-import { isJQuery } from '../../util';
-import { action } from './action';
+import {isJQuery} from '../../util';
+import {action} from './action';
 
 export const select = action('select', ($, value, selector: string): JQuery[] => {
     const elements = isJQuery(value) ? value.find(selector) : $(selector);

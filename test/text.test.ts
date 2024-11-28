@@ -1,12 +1,12 @@
-import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
-import { JSDOM } from 'jsdom';
+import {describe, expect, test} from 'bun:test';
+import {readFileSync} from 'node:fs';
+import {JSDOM} from 'jsdom';
 import jQueryFactory from 'jquery';
-import { allText, ownText } from '../src/util';
+import {allText, ownText} from '../src/util';
 
 describe('texts', () => {
     const html = readFileSync('./test/fragment/mangakakalot.html', 'utf-8');
-    const { window } = new JSDOM(html) as unknown as Window;
+    const {window} = new JSDOM(html) as unknown as Window;
     const $ = jQueryFactory(window, true);
 
     test('own text', () => {

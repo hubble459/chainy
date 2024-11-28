@@ -1,5 +1,5 @@
-import { isJQuery } from '../../util';
-import { action } from './action';
+import {isJQuery} from '../../util';
+import {action} from './action';
 
 type Return<Value> = Value extends unknown
     ? Value[]

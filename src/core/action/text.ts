@@ -1,6 +1,6 @@
-import { UnprocessableError } from '../../error/unprocessable_error';
-import { allText, isJQuery, ownText } from '../../util';
-import { action } from './action';
+import {UnprocessableError} from '../../error/unprocessable_error';
+import {allText, isJQuery, ownText} from '../../util';
+import {action} from './action';
 
 type Return<Value> = Value extends JQuery | string | number | boolean | bigint | symbol | Date
     ? string

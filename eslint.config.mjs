@@ -35,7 +35,7 @@ export default [
             '@stylistic/no-trailing-spaces': 'error',
             '@stylistic/quotes': ['error', 'single'],
             '@stylistic/semi': ['error', 'always'],
-            '@stylistic/block-spacing': ['error', 'always'],
+            '@stylistic/block-spacing': ['error', 'never'],
             '@stylistic/comma-spacing': 'error',
             '@stylistic/comma-style': ['error', 'last'],
             '@stylistic/computed-property-spacing': ['error', 'never'],
@@ -61,9 +61,14 @@ export default [
             }],
             '@stylistic/object-curly-spacing': ['error', 'never'],
             '@stylistic/object-property-newline': ['error', {allowAllPropertiesOnSameLine: true}],
-            '@stylistic/operator-linebreak': ['error', 'after'],
+            '@stylistic/operator-linebreak': ['error', 'before'],
             '@stylistic/padding-line-between-statements': ['error'],
-            '@stylistic/member-delimiter-style': ['error'],
+            '@stylistic/member-delimiter-style': ['error', {
+                multiline: {
+                    delimiter: 'semi',
+                    requireLast: true,
+                },
+            }],
         },
     },
     {
@@ -75,6 +80,7 @@ export default [
             '@typescript-eslint/no-unsafe-call': 'off',
             '@typescript-eslint/no-unsafe-return': 'off',
             '@typescript-eslint/unified-signatures': 'off',
+            '@typescript-eslint/no-non-null-assertion': 'off',
         },
     },
     {
