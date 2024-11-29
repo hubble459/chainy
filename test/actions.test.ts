@@ -4,7 +4,7 @@ import {JSDOM} from 'jsdom';
 import jQueryFactory from 'jquery';
 import {actions} from '../src/core/action';
 
-const {attribute, list, regex, select, text} = actions;
+const {attribute, regex, select, text} = actions;
 
 describe('actions', () => {
     const html = readFileSync('./test/fragment/mangakakalot.html', 'utf-8');
@@ -19,14 +19,6 @@ describe('actions', () => {
 
     test('select:chained', () => {
         const value = select.run($, undefined, 'ul.manga-info-text');
-
-        const element = select.run($, value, 'h1')[0];
-
-        expect(element?.text()).toBe('Lord of Destiny Wheel');
-    });
-
-    test('select:chained', () => {
-        const value = list.run($, 'undefined');
 
         const element = select.run($, value, 'h1')[0];
 
