@@ -7,20 +7,21 @@ type PossibleActions<Output = any> = {[K in keyof Actions as GetType<K, Output e
 type ActionsWithOptions<Output> = {[K in keyof PossibleActions<Output> as ActionOptions<K> extends undefined ? never : K]: ActionOptions<K>};
 type ActionsWithoutOptions<Output> = {[K in keyof PossibleActions<Output> as undefined extends ActionOptions<K> ? K : never]: K};
 type Propagate<Output, K extends keyof Actions> = Output extends unknown[] ? Actions[K]['take_array'] extends true ? GetType<K, Output> : GetType<K, Output[number]>[] : GetType<K, Output>;
-type ChainCallback<Values extends unknown[], Output extends Chain> = (chain: Chain<Last<Values>, Values>) => Output;
+type ChainCallback<Value, Values extends unknown[], Output extends Chain> = (chain: Chain<Value, Values>) => Output;
 type Last<Values extends unknown[]> = Values extends [...any, infer Last] ? Last : unknown;
+type Before<Values extends unknown[]> = Values extends [...infer Before, any] ? Before : never;
 interface ChainAction<K extends keyof Actions = keyof Actions> {
     action: K;
     options: ActionOptions<K>;
 }
 
-export class Chain<Input = unknown, Values extends unknown[] = [...any]> {
+export class Chain<Input = unknown, Values extends unknown[] = [...any], Previous = unknown> {
     private readonly items: (ChainAction | Chain)[] = [];
 
-    public add<Output, AddValues extends unknown[]>(chain: ChainCallback<Values, Chain<Output, AddValues>>): Chain<Input, [...Values, ...AddValues]>;
-    public add<K extends keyof ActionsWithoutOptions<Last<Values>>>(action: K): Chain<Input, [...Values, Propagate<Last<Values>, K>]>;
-    public add<K extends keyof ActionsWithOptions<Last<Values>>>(action: K, options: ActionOptions<K>): Chain<Input, [...Values, Propagate<Last<Values>, K>]>;
-    public add(action: keyof Actions | ChainCallback<Values, Chain>, options?: any): any {
+    public add<Output, AddValues extends unknown[]>(chain: ChainCallback<Last<Values>, Values, Chain<Output, AddValues>>): Chain<Input, [...Values, ...AddValues], Last<Values>>;
+    public add<K extends keyof ActionsWithoutOptions<Last<Values>>>(action: K): Chain<Input, [...Values, Propagate<Last<Values>, K>], Last<Values>>;
+    public add<K extends keyof ActionsWithOptions<Last<Values>>>(action: K, options: ActionOptions<K>): Chain<Input, [...Values, Propagate<Last<Values>, K>], Last<Values>>;
+    public add(action: keyof Actions | ChainCallback<Last<Values>, Values, Chain>, options?: any): any {
         if (typeof action === 'function') {
             this.items.push(...(action(new Chain())).items);
         } else {
@@ -30,9 +31,15 @@ export class Chain<Input = unknown, Values extends unknown[] = [...any]> {
         return this;
     }
 
-    public or<Output, OrValues extends unknown[]>(chain: ChainCallback<Values, Chain<Output, OrValues>>): Chain<Input, Values extends [...infer Before, infer LastValue] ? [...Before, LastValue | Last<OrValues>] : never>;
-    public or(closure: any): any {
-        this.items.push(closure(new Chain()));
+    public or<Output, OrValues extends unknown[]>(chain: ChainCallback<Previous, Values, Chain<Output, OrValues>>): Chain<Input, [...Before<Values>, Last<Values> | Last<OrValues>], Previous>;
+    public or<K extends keyof ActionsWithoutOptions<Previous>>(action: K): Chain<Input, [...Before<Values>, Last<Values> | Propagate<Last<Values>, K>], Previous>;
+    public or<K extends keyof ActionsWithOptions<Previous>>(action: K, options: ActionOptions<K>): Chain<Input, [...Before<Values>, Last<Values> | Propagate<Last<Values>, K>], Previous>;
+    public or(action: keyof Actions | ChainCallback<Previous, Values, Chain>, options?: any): any {
+        if (typeof action === 'function') {
+            this.items.push(action(new Chain()));
+        } else {
+            this.items.push(new Chain().add(action as any, options));
+        }
 
         return this;
     }

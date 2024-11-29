@@ -49,7 +49,7 @@ describe('chain', () => {
 
         const result = chain
             .add('select', '#does-not-exist')
-            .or(chain => chain.add('select', 'ul.manga-info-text li:nth-child(7) a'))
+            .or('select', 'ul.manga-info-text li:nth-child(7) a')
             .add('text')
             .execute($);
 
@@ -61,8 +61,8 @@ describe('chain', () => {
 
         const result = chain
             .add('select', '#does-not-exist')
-            .or(chain => chain.add('select', '#does-not-exist-2'))
-            .or(chain => chain.add('select', 'ul.manga-info-text li:nth-child(7) a'))
+            .or('select', '#does-not-exist-2')
+            .or('select', 'ul.manga-info-text li:nth-child(7) a')
             .add('text')
             .execute($);
 
