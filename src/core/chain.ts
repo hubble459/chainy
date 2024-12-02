@@ -1,27 +1,24 @@
-import {actions, type GetType} from './action';
-import type {Action} from './action/action';
+import {actions, type Action, type Actions, type GetType} from './action';
 
-type Actions = typeof actions;
-type ActionOptions<K extends keyof Actions> = Actions[K]['run'] extends Action<infer Options> ? Options : never;
-type PossibleActions<Output = any> = {[K in keyof Actions as GetType<K, Output extends unknown[] ? Actions[K]['take_array'] extends true ? Output : Output[keyof Output] : Output> extends never ? never : K]: K};
-type ActionsWithOptions<Output> = {[K in keyof PossibleActions<Output> as ActionOptions<K> extends undefined ? never : K]: ActionOptions<K>};
-type ActionsWithoutOptions<Output> = {[K in keyof PossibleActions<Output> as undefined extends ActionOptions<K> ? K : never]: K};
-type Propagate<Output, K extends keyof Actions> = Output extends unknown[] ? Actions[K]['take_array'] extends true ? GetType<K, Output> : GetType<K, Output[number]>[] : GetType<K, Output>;
+type PossibleActions<Value> = {[K in keyof Actions as Value extends unknown ? K : GetType<K, Value> extends never ? never : K]: K};
+type ActionOptions<K extends keyof Actions> = Actions[K] extends Action<any, any, infer Options> ? Options : [];
+
+type Propagate<Output, K extends keyof Actions> = GetType<K, Output>;
+
 type ChainCallback<Value, Values extends unknown[], Output extends Chain> = (chain: Chain<Value, Values>) => Output;
 type Last<Values extends unknown[]> = Values extends [...any, infer Last] ? Last : unknown;
 type Before<Values extends unknown[]> = Values extends [...infer Before, any] ? Before : never;
-interface ChainAction<K extends keyof Actions = keyof Actions> {
+interface ChainAction<K extends keyof Actions> {
     action: K;
     options: ActionOptions<K>;
 }
 
 export class Chain<Input = unknown, Values extends unknown[] = [...any], Previous = unknown> {
-    private readonly items: (ChainAction | Chain)[] = [];
+    private readonly items: (ChainAction<any> | Chain)[] = [];
 
     public add<Output, AddValues extends unknown[]>(chain: ChainCallback<Last<Values>, Values, Chain<Output, AddValues>>): Chain<Input, [...Values, ...AddValues], Last<Values>>;
-    public add<K extends keyof ActionsWithoutOptions<Last<Values>>>(action: K): Chain<Input, [...Values, Propagate<Last<Values>, K>], Last<Values>>;
-    public add<K extends keyof ActionsWithOptions<Last<Values>>>(action: K, options: ActionOptions<K>): Chain<Input, [...Values, Propagate<Last<Values>, K>], Last<Values>>;
-    public add(action: keyof Actions | ChainCallback<Last<Values>, Values, Chain>, options?: any): any {
+    public add<K extends keyof PossibleActions<Last<Values>>>(action: K, ...options: ActionOptions<K>): Chain<Input, [...Values, Propagate<Last<Values>, K>], Last<Values>>;
+    public add(action: keyof Actions | ChainCallback<Last<Values>, Values, Chain>, ...options: any): any {
         if (typeof action === 'function') {
             this.items.push(...(action(new Chain())).items);
         } else {
@@ -32,13 +29,13 @@ export class Chain<Input = unknown, Values extends unknown[] = [...any], Previou
     }
 
     public or<Output, OrValues extends unknown[]>(chain: ChainCallback<Previous, Values, Chain<Output, OrValues>>): Chain<Input, [...Before<Values>, Last<Values> | Last<OrValues>], Previous>;
-    public or<K extends keyof ActionsWithoutOptions<Previous>>(action: K): Chain<Input, [...Before<Values>, Last<Values> | Propagate<Last<Values>, K>], Previous>;
-    public or<K extends keyof ActionsWithOptions<Previous>>(action: K, options: ActionOptions<K>): Chain<Input, [...Before<Values>, Last<Values> | Propagate<Last<Values>, K>], Previous>;
-    public or(action: keyof Actions | ChainCallback<Previous, Values, Chain>, options?: any): any {
+    public or<K extends keyof PossibleActions<Previous>>(action: K, ...options: ActionOptions<K>): Chain<Input, [...Before<Values>, Last<Values> | Propagate<Last<Values>, K>], Previous>;
+    public or(action: keyof Actions | ChainCallback<Previous, Values, Chain>, ...options: any[]): any {
         if (typeof action === 'function') {
             this.items.push(action(new Chain()));
         } else {
-            this.items.push(new Chain().add(action as any, options));
+            // @ts-expect-error spread argument not allowed?!
+            this.items.push(new Chain().add(action, ...options));
         }
 
         return this;
@@ -55,15 +52,16 @@ export class Chain<Input = unknown, Values extends unknown[] = [...any], Previou
                 if (item instanceof Chain) {
                     value = item.execute(input, value);
                 } else {
-                    const action = actions[item.action];
+                    const action = actions[item.action as keyof Actions];
                     if (Array.isArray(value)) {
-                        if (action.take_array) {
-                            value = action.run(input, value, item.options);
+                        // @ts-expect-error expect_array is not a field
+                        if (action.expect_array) {
+                            value = action(input, value as any, ...item.options);
                         } else {
-                            value = value.map(v => action.run(input, v, item.options));
+                            value = value.map(v => action(input, v, ...item.options));
                         }
                     } else {
-                        value = action.run(input, value, item.options);
+                        value = action(input, value as any, ...item.options);
                     }
                 }
                 console.log(`Action (${'action' in item ? item.action : item.toString()}) got value ${JSON.stringify(value)}`);
@@ -94,7 +92,7 @@ export class Chain<Input = unknown, Values extends unknown[] = [...any], Previou
         return 'chain:' + this.items.map((v) => {
             if (v instanceof Chain) {
                 return v.toString();
-            } else if (v.options) {
+            } else if (v.options.length) {
                 return v.action + '(' + JSON.stringify(v.options) + ')';
             }
             return v.action;
