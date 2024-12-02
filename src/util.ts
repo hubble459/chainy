@@ -1,6 +1,16 @@
+import type {Action} from './core';
+
+export function expect_array(action: Action<any, any[], any>) {
+    // @ts-expect-error expect_array field doesn't exist
+    action.expect_array = true;
+}
+
 export function isJQuery(object: unknown): object is JQuery {
-    return (typeof object === 'function' && object.name === 'jQuery')
-      || (typeof object === 'object' && !!object && 'jquery' in object);
+    return (typeof object === 'object' && !!object && 'jquery' in object);
+}
+
+export function isJQueryStatic(object: unknown): object is JQueryStatic {
+    return (typeof object === 'function' && object.name === 'jQuery');
 }
 
 export function allText($: JQuery): string | string[] {

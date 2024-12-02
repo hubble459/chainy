@@ -24,8 +24,8 @@ describe('manga', () => {
                 .add('select', 'h2.story-alternative')
                 .add('first')
                 .add(text_trim)
-                .add('regex', {regex: /^Alternative : /})
-                .add('split', {separator: /\w*;[\w\n]*/})
+                .add('regex', /^Alternative : /)
+                .add('split', /\w*;[\w\n]*/)
                 .add('trim'),
             description: new Chain()
                 .add('select', 'meta[name="description"]')
@@ -42,7 +42,7 @@ describe('manga', () => {
                 .add('select', 'ul.manga-info-text li:nth-child(3)')
                 .add('first')
                 .add(text_trim)
-                .add('regex', {regex: /^Status :\s*/})
+                .add('regex', /^Status :\s*/)
                 .add(chain => chain.add('matches', /on-?going/ig).add('value', 'Ongoing'))
                 .or(chain => chain.add('matches', /drop|stop|unfinished/ig).add('value', 'Unfinished'))
                 .or(chain => chain.add('matches', /finished/ig).add('value', 'Finished'))
@@ -51,12 +51,14 @@ describe('manga', () => {
                 .add('select', 'ul.manga-info-text li:nth-child(3)')
                 .add('first')
                 .add(text_trim)
-                .add('regex', {regex: /^Status :\s*/})
+                .add('regex', /^Status :\s*/)
                 .add(chain => chain.add('matches', /on-?going/ig).add('value', 'Ongoing'))
                 .or(chain => chain.add('matches', /drop|stop|unfinished/ig).add('value', 'Unfinished'))
                 .or(chain => chain.add('matches', /finished/ig).add('value', 'Finished'))
                 .or(chain => chain.add('value', 'Ongoing'))
-                .add('matches', /Ongoing/),
+                .add('matches', /Ongoing/)
+                .or(chain => chain.add('value', false))
+                .add('value', true),
         };
 
         const manga = Object.fromEntries(Object.entries(manga_builder).map(([key, chain]) => [key, chain.execute($)]));
