@@ -1,34 +1,35 @@
 import {describe, expect, test} from 'bun:test';
-import {Chain} from '../src/core/chain';
+import {Chainy} from '../src/core/chainy';
 
 describe('serialize', () => {
     test('json', () => {
-        const chain = new Chain()
+        const chain = new Chainy()
             .add('select', 'h1')
             .add('first')
             .add('text');
 
         expect(JSON.parse(JSON.stringify(chain))).toEqual({
+            type: 'and',
             items: [
-                {action: 'select', options: 'h1'},
-                {action: 'first'},
-                {action: 'text'},
+                {action: 'select', options: ['h1']},
+                {action: 'first', options: []},
+                {action: 'text', options: []},
             ],
         });
     });
 
     test('to array', () => {
-        const chain = new Chain()
+        const chain = new Chainy()
             .add('select', 'h1')
             .or(chain => chain.add('select', 'h2'))
             .add('first')
             .add('text');
 
         expect(chain.toArray()).toEqual([
-            {action: 'select', options: 'h1'},
-            [{action: 'select', options: 'h2'}],
-            {action: 'first'},
-            {action: 'text'},
+            {action: 'select', options: ['h1']},
+            [{action: 'select', options: ['h2']}],
+            {action: 'first', options: []},
+            {action: 'text', options: []},
         ]);
     });
 

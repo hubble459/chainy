@@ -1,2 +1,2 @@
 export * from './action';
-export * from './chain';
+export * from './chainy';

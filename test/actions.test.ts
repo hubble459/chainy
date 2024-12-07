@@ -12,41 +12,41 @@ describe('actions', () => {
     const $ = jQueryFactory(window, true);
 
     test('select', () => {
-        const element = select.run($, undefined, 'h1')[0];
+        const element = select($, $, 'h1')[0];
 
         expect(element?.text()).toBe('Lord of Destiny Wheel');
     });
 
     test('select:chained', () => {
-        const value = select.run($, undefined, 'ul.manga-info-text');
+        const value = select($, $, 'ul.manga-info-text')[0]!;
 
-        const element = select.run($, value, 'h1')[0];
+        const element = select($, value, 'h1')[0];
 
         expect(element?.text()).toBe('Lord of Destiny Wheel');
     });
 
     test('text', () => {
-        const value = select.run($, undefined, 'ul.manga-info-text h1')[0];
+        const value = select($, $, 'ul.manga-info-text h1')[0]!;
 
-        const result = text.run($, value, 'all');
+        const result = text($, value, 'all');
 
         expect(result).toBe('Lord of Destiny Wheel');
     });
 
     test('attribute', () => {
-        const value = select.run($, undefined, 'meta[name="description"]')[0];
+        const value = select($, $, 'meta[name="description"]')[0]!;
 
-        const result = attribute.run($, value, 'content');
+        const result = attribute($, value, 'content');
 
         expect(result).toBe('A planet called Ghost Star suddenly appeared, causing the earth\'s animals and plants to evolve into monsters that can destroy humans. At the time of human extinction, people accidentally discovered a way to log into the ghost star, and found that they could gain power against mon');
     });
 
     test('regex', () => {
-        const value1 = select.run($, undefined, 'ul.manga-info-text h1')[0];
+        const value1 = select($, $, 'ul.manga-info-text h1')[0]!;
 
-        const value2 = text.run($, value1, 'all');
+        const value2 = text($, value1, 'all');
 
-        const value3 = regex.run($, value2, {regex: /\w+ \w+ /});
+        const value3 = regex($, value2, /\w+ \w+ /);
 
         expect(value3).toBe('Destiny Wheel');
     });
