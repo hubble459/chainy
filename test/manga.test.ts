@@ -2,9 +2,7 @@ import {describe, expect, test} from 'bun:test';
 import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
 import jQueryFactory from 'jquery';
-import {Chain} from '../src/core/chain';
-
-type ChainExtension<Value> = Chain<JQueryStatic, [...any, Value]>;
+import {Chainy} from '../src/core/chainy';
 
 describe('manga', () => {
     const html = readFileSync('./test/fragment/mangakakalot.html', 'utf-8');
@@ -13,53 +11,53 @@ describe('manga', () => {
 
 
     test('select > text', () => {
-        const text_trim = (chain: ChainExtension<JQuery | JQuery[]>) => chain.add('text').add('trim');
+        const first_text_trim = (chain: Chainy<JQueryStatic, JQuery[]>) => chain.add('first').add('text').add('trim');
 
         const manga_builder = {
-            title: new Chain()
+            title: new Chainy()
                 .add('select', 'h1:first')
-                .add('first')
-                .add(text_trim),
-            alternative_titles: new Chain()
+                .add(first_text_trim),
+            alternative_titles: new Chainy()
                 .add('select', 'h2.story-alternative')
-                .add('first')
-                .add(text_trim)
-                .add('regex', {regex: /^Alternative : /})
-                .add('split', {separator: /\w*;[\w\n]*/})
+                .add(first_text_trim)
+                .add('regex', /^Alternative : /)
+                .add('split', /\w*;[\w\n]*/)
                 .add('trim'),
-            description: new Chain()
+            description: new Chainy()
                 .add('select', 'meta[name="description"]')
                 .add('first')
                 .add('attribute', 'content')
                 .add('trim'),
-            genres: new Chain()
+            genres: new Chainy()
                 .add('select', 'ul.manga-info-text li:nth-child(7) a')
-                .add(text_trim),
-            authors: new Chain()
+                .add('text')
+                .add('trim'),
+            authors: new Chainy()
                 .add('select', 'ul.manga-info-text li:nth-child(2) a')
-                .add(text_trim),
-            status: new Chain()
+                .add('text')
+                .add('trim'),
+            status: new Chainy()
                 .add('select', 'ul.manga-info-text li:nth-child(3)')
-                .add('first')
-                .add(text_trim)
-                .add('regex', {regex: /^Status :\s*/})
+                .add(first_text_trim)
+                .add('regex', /^Status :\s*/)
                 .add(chain => chain.add('matches', /on-?going/ig).add('value', 'Ongoing'))
                 .or(chain => chain.add('matches', /drop|stop|unfinished/ig).add('value', 'Unfinished'))
                 .or(chain => chain.add('matches', /finished/ig).add('value', 'Finished'))
                 .or(chain => chain.add('value', 'Ongoing')),
-            is_ongoing: new Chain()
+            is_ongoing: new Chainy()
                 .add('select', 'ul.manga-info-text li:nth-child(3)')
-                .add('first')
-                .add(text_trim)
-                .add('regex', {regex: /^Status :\s*/})
+                .add(first_text_trim)
+                .add('regex', /^Status :\s*/)
                 .add(chain => chain.add('matches', /on-?going/ig).add('value', 'Ongoing'))
                 .or(chain => chain.add('matches', /drop|stop|unfinished/ig).add('value', 'Unfinished'))
                 .or(chain => chain.add('matches', /finished/ig).add('value', 'Finished'))
                 .or(chain => chain.add('value', 'Ongoing'))
-                .add('matches', /Ongoing/),
+                .add('matches', /Ongoing/)
+                .or(chain => chain.add('value', false))
+                .add('value', true),
         };
 
-        const manga = Object.fromEntries(Object.entries(manga_builder).map(([key, chain]) => [key, chain.execute($)]));
+        const manga = Object.fromEntries(Object.entries(manga_builder).map(([key, chain]) => [key, chain.run($)]));
 
         expect(manga).toEqual({
             title: 'Lord of Destiny Wheel',

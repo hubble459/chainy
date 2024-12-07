@@ -1,28 +1,23 @@
-import {UnprocessableError} from '../../error/unprocessable_error';
+import {ActionError} from '../../error/action_error';
 import {allText, isJQuery, ownText} from '../../util';
-import {action} from './action';
 
-type Return<Value> = Value extends JQuery | string | number | boolean | bigint | symbol | Date
-    ? string
-    : never;
-
-export const text = action('text', ($, value, text_type?: 'own' | 'all'): Return<typeof value> => {
+export function text(context: any, value: JQuery | string | number | boolean | bigint | symbol | Date, text_type?: 'own' | 'all'): string {
     switch (typeof value) {
         case 'string':
-            return value as Return<typeof value>;
+            return value;
 
         case 'bigint':
         case 'symbol':
         case 'number':
-            return value.toString() as Return<typeof value>;
+            return value.toString();
 
         case 'boolean':
-            return (value ? 'true' : 'false') as Return<typeof value>;
+            return (value ? 'true' : 'false');
 
         case 'object':
         case 'function':
             if (isJQuery(value)) {
-                return (text_type === 'own' ? ownText(value) : allText(value)) as Return<typeof value>;
+                return (text_type === 'own' ? ownText(value) : allText(value)) as string;
             }
             break;
 
@@ -30,5 +25,5 @@ export const text = action('text', ($, value, text_type?: 'own' | 'all'): Return
             break;
     }
 
-    throw new UnprocessableError();
-});
+    throw new ActionError();
+}

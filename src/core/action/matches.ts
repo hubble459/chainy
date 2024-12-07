@@ -1,18 +1,9 @@
-import {UnprocessableError} from '../../error/unprocessable_error';
-import {action} from './action';
+import {ActionError} from '../../error/action_error';
 
-type Return<Value> = Value extends string
-    ? true
-    : never;
-
-export const matches = action('matches', ($, value, regex: RegExp): Return<typeof value> => {
-    if (typeof value !== 'string') {
-        throw new UnprocessableError();
-    }
-
+export function matches(context: any, value: string, regex: RegExp) {
     if (!regex.test(value)) {
-        throw new Error('Does not match');
+        throw new ActionError('Does not match');
     }
 
-    return true as Return<typeof value>;
-});
+    return value;
+}
