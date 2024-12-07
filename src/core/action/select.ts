@@ -1,12 +1,11 @@
-import {isJQuery} from '../../util';
-import {action} from './action';
+import {isJQuery, isJQueryStatic} from '../../util';
 
-export const select = action('select', ($, value, selector: string): JQuery[] => {
-    const elements = isJQuery(value) ? value.find(selector) : $(selector);
+export function select(context: JQueryStatic, value: JQueryStatic | JQuery, selector: string) {
+    const elements = isJQuery(value) ? value.find(selector) : isJQueryStatic(value) ? value(selector) : context(selector);
 
     if (elements.length === 0) {
         throw new Error('No elements found');
     }
 
-    return elements.toArray().map(el => $(el));
-});
+    return elements.toArray().map(el => context(el));
+}
