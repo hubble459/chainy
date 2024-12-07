@@ -18,36 +18,23 @@ describe('serialize', () => {
         });
     });
 
-    test('to array', () => {
+    test('from json', () => {
         const chain = new Chainy()
             .add('select', 'h1')
             .or(chain => chain.add('select', 'h2'))
+            .or(chain => chain.add('select', 'h3'))
+            .or(chain => chain.add('select', 'h3').add('first'))
+            .or(chain => chain
+                .add('select', 'h3')
+                .or(chain => chain.add('select', 'h4')))
             .add('first')
             .add('text');
 
-        expect(chain.toArray()).toEqual([
-            {action: 'select', options: ['h1']},
-            [{action: 'select', options: ['h2']}],
-            {action: 'first', options: []},
-            {action: 'text', options: []},
-        ]);
-    });
+        const json = JSON.stringify(chain);
 
-    test('from json', () => {
-        // const chain = new Chain()
-        //     .add('select', 'h1')
-        //     .or(chain => chain.add('select', 'h2'))
-        //     .or(chain => chain.add('select', 'h3'))
-        //     .or(chain => chain.add('select', 'h3').add('first'))
-        //     .or(chain => chain
-        //         .add('select', 'h3')
-        //         .or(chain => chain.add('select', 'h4')))
-        //     .add('first')
-        //     .add('text');
+        const parsed = Chainy.fromJSON(json);
 
-        // const chain_string = chain.toString();
-
-        // expect(chain_from_json.toString()).toEqual(chain_string);
+        expect(JSON.stringify(parsed)).toEqual(json);
     });
 
     // test('stringify', () => {
