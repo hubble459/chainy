@@ -77,11 +77,6 @@ export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown>
         return value;
     }
 
-    public toArray(): any[] {
-        return this.items.map(item => 'toArray' in item ? item.toArray() : item);
-    }
-
-
     public toString(): string {
         if (!('toJSON' in RegExp.prototype)) {
             // @ts-expect-error toJSON does not exist on RegExp
@@ -97,5 +92,27 @@ export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown>
             }
             return v.action;
         }).join('>>');
+    }
+
+    static fromJSON(json: unknown): Chainy {
+        if (typeof json === 'string') {
+            json = JSON.parse(json);
+        }
+
+        if (!json || typeof json !== 'object' || !('items' in json) || !('type' in json) || !Array.isArray(json.items)) {
+            throw new Error('Not a valid JSON object!');
+        }
+
+        const chain = new Chainy(json.type as 'or' | 'and');
+
+        for (const item of json.items) {
+            if ('items' in item) {
+                chain.items.push(this.fromJSON(item));
+            } else {
+                chain.items.push(item);
+            }
+        }
+
+        return chain;
     }
 }
