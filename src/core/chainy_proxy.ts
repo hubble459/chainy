@@ -9,7 +9,7 @@ type ChainyProxy<Context = JQueryStatic, Value = Context, Previous = unknown> = 
     add<V>(closure: (chainy: ChainyProxy<Context, Value, Previous>) => ChainyProxy<unknown, V>): ChainyProxy<Context, V, Value>;
     or<V>(closure: (chainy: ChainyProxy<Context, Previous, Previous>) => ChainyProxy<unknown, V>): ChainyProxy<Context, V | Value, Previous>;
     run(input: Context): Value;
-};
+} & Omit<Chainy, 'add' | 'or'>;
 
 export function chainy<Context = JQueryStatic, Value = Context, Previous = unknown>(type: 'and' | 'or' = 'and'): ChainyProxy<Context, Value, Previous> {
     const chain = new Chainy(type);

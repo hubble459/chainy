@@ -1,13 +1,5 @@
-import {isJQuery} from '../../util';
+import {select} from './select';
 
-export function select_first(context: any, value: JQueryStatic | JQuery, selector: string) {
-    const elements = isJQuery(value)
-        ? value.find(selector)
-        : value(selector);
-
-    if (elements.length === 0) {
-        throw new Error('No elements found');
-    }
-
-    return elements.eq(0);
+export function select_first(context: JQueryStatic, value: JQueryStatic | JQuery, selector: string) {
+    return select(context, value, selector)[0]!;
 }

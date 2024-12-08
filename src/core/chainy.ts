@@ -52,6 +52,8 @@ export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown>
                 if (item instanceof Chainy) {
                     value = item.run(input, value);
                 } else {
+                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+                    item.options ??= [];
                     const action = actions[item.action] as Action;
                     if (Array.isArray(value)) {
                         // @ts-expect-error expect_array is not a field
@@ -62,6 +64,12 @@ export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown>
                         }
                     } else {
                         value = action(input, value, ...item.options);
+                    }
+                }
+                if (allowed_to_fail) {
+                    let n;
+                    while ((n = this.items[i + 1]) && n instanceof Chainy && n.type === 'or') {
+                        i++;
                     }
                 }
                 // console.log(`Action (${'action' in item ? item.action : item.toString()}) got value ${JSON.stringify(value)}`);
@@ -75,6 +83,16 @@ export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown>
         }
 
         return value;
+    }
+
+    public toObject(): any {
+        if (!('toJSON' in RegExp.prototype)) {
+            // @ts-expect-error toJSON does not exist on RegExp
+            // eslint-disable-next-line @typescript-eslint/unbound-method
+            RegExp.prototype.toJSON = RegExp.prototype.toString;
+        }
+
+        return JSON.parse(JSON.stringify(this));
     }
 
     public toString(): string {

@@ -9,10 +9,13 @@ import {split} from './split';
 import {text} from './text';
 import {trim} from './trim';
 import {value} from './value';
+import {cast_float} from './cast_float';
+import {cast_int} from './cast_int';
 import {first} from './array/first';
 import {join} from './array/join';
+import {divide} from './array/divide';
 
-export const actions = {attribute, matches, regex, select, select_first, split, text, trim, value, first, join};
+export const actions = {attribute, matches, regex, select, select_first, split, text, trim, value, cast_float, cast_int, first, join, divide};
 
 export type Action<Context = any, Value = any, Options extends any[] = any[], Return = any> = (context: NonNullable<Context>, value: Value, ...options: Options) => Return;
 export type Actions = typeof actions;

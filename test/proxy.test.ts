@@ -91,4 +91,18 @@ describe('chain proxy', () => {
             .text()
             .run.bind(chain, $)).toThrow('No elements found');
     });
+
+    test('use first and', () => {
+        const result = chainy()
+            .select('div.story-info-right h1')
+            .or_select('ul.manga-info-text h1')
+            .or_select('h1')
+            .or_select('h2')
+            .first()
+            .text()
+            .trim()
+            .run($);
+
+        expect(result).toEqual('Lord of Destiny Wheel');
+    });
 });
