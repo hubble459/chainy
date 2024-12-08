@@ -3,6 +3,7 @@ import {readFileSync} from 'node:fs';
 import {JSDOM} from 'jsdom';
 import jQueryFactory from 'jquery';
 import {actions} from '../src/core/action';
+import {cast_date} from '../src/core/action/cast_date';
 
 const {attribute, regex, select, text} = actions;
 
@@ -49,5 +50,12 @@ describe('actions', () => {
         const value3 = regex($, value2, /\w+ \w+ /);
 
         expect(value3).toBe('Destiny Wheel');
+    });
+
+
+    test('cast_date', () => {
+        const element = cast_date($, 'Oct-16-2024 10:57', 'MMM-dd-yyyy HH:mm');
+
+        expect(element.toISOString()).toBe('2024-10-16T10:57:00.000Z');
     });
 });
