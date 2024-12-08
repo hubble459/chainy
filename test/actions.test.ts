@@ -5,6 +5,7 @@ import jQueryFactory from 'jquery';
 import {actions} from '../src/core/action';
 import {cast_date} from '../src/core/action/cast_date';
 import {abs_url} from '../src/core/action/abs_url';
+import {cast_relative_date} from '../src/core/action/cast_relative_date';
 
 const {attribute, regex, select, text} = actions;
 
@@ -53,11 +54,16 @@ describe('actions', () => {
         expect(value3).toBe('Destiny Wheel');
     });
 
-
     test('cast_date', () => {
         const element = cast_date($, 'Oct-16-2024 10:57', 'MMM-dd-yyyy HH:mm');
 
         expect(element.toISOString()).toBe('2024-10-16T10:57:00.000Z');
+    });
+
+    test('cast_relative_date', () => {
+        expect(cast_relative_date($, '2 minutes ago').getMinutes()).toBe(new Date().getMinutes() - 2);
+        expect(cast_relative_date($, '2 hours ago').getHours()).toBe(new Date().getHours() - 2);
+        expect(cast_relative_date($, 'just now').getSeconds()).toBe(new Date().getSeconds());
     });
 
     test('abs_url', () => {

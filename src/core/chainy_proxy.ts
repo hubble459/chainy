@@ -8,6 +8,7 @@ type ChainyProxy<Context = JQueryStatic, Value = Context, Previous = unknown> = 
 } & {
     add<V>(closure: (chainy: ChainyProxy<Context, Value, Previous>) => ChainyProxy<unknown, V>): ChainyProxy<Context, V, Value>;
     or<V>(closure: (chainy: ChainyProxy<Context, Previous, Previous>) => ChainyProxy<unknown, V>): ChainyProxy<Context, V | Value, Previous>;
+    toChainy(): Chainy<Context, Value, Previous>;
     run(input: Context): Value;
 } & Omit<Chainy, 'add' | 'or'>;
 
@@ -20,6 +21,11 @@ export function chainy<Context = JQueryStatic, Value = Context, Previous = unkno
     Object.defineProperties(chain, {
         ...Object.fromEntries(Object.keys(actions).map(action => [action, {get: () => (...options: any[]) => chain.add(action as any, ...options)}])),
         ...Object.fromEntries(Object.keys(actions).map(action => [`or_${action}`, {get: () => (...options: any[]) => chain.or(action as any, ...options)}])),
+        toChainy: {
+            get: function () {
+                return () => this;
+            },
+        },
         or: {
             get: function () {
                 return (callback: any, ...args: any) => {

@@ -24,6 +24,7 @@
   "dependencies": {
     "date-fns": "^4.1.0",
     "jquery": "^3.7.1",
-    "jsdom": "^25.0.1"
+    "jsdom": "^25.0.1",
+    "parse-human-relative-time": "^3.0.2"
   }
 }

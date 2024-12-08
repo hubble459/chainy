@@ -13,11 +13,12 @@ import {select_first} from './select_first';
 import {trim} from './trim';
 import {attribute} from './attribute';
 import {matches} from './matches';
+import {cast_relative_date} from './cast_relative_date';
 import {first} from './array/first';
 import {join} from './array/join';
 import {divide} from './array/divide';
 
-export const actions = {cast_float, cast_date, cast_int, regex, abs_url, select, value, text, split, select_first, trim, attribute, matches, first, join, divide};
+export const actions = {cast_float, cast_date, cast_int, regex, abs_url, select, value, text, split, select_first, trim, attribute, matches, cast_relative_date, first, join, divide};
 
 export type Action<Context = any, Value = any, Options extends any[] = any[], Return = any> = (context: NonNullable<Context>, value: Value, ...options: Options) => Return;
 export type Actions = typeof actions;
