@@ -4,12 +4,13 @@ import {JSDOM} from 'jsdom';
 import jQueryFactory from 'jquery';
 import {actions} from '../src/core/action';
 import {cast_date} from '../src/core/action/cast_date';
+import {abs_url} from '../src/core/action/abs_url';
 
 const {attribute, regex, select, text} = actions;
 
 describe('actions', () => {
     const html = readFileSync('./test/fragment/mangakakalot.html', 'utf-8');
-    const {window} = new JSDOM(html) as unknown as Window;
+    const {window} = new JSDOM(html, {url: 'https://mangakakalot.com/manga/fm939336'}) as unknown as Window;
     const $ = jQueryFactory(window, true);
 
     test('select', () => {
@@ -57,5 +58,11 @@ describe('actions', () => {
         const element = cast_date($, 'Oct-16-2024 10:57', 'MMM-dd-yyyy HH:mm');
 
         expect(element.toISOString()).toBe('2024-10-16T10:57:00.000Z');
+    });
+
+    test('abs_url', () => {
+        const element = abs_url($, '/index.html');
+
+        expect(element).toBe('https://mangakakalot.com/index.html');
     });
 });

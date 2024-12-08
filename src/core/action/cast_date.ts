@@ -1,5 +1,4 @@
-import {parse} from 'date-fns';
-import type {Locale} from 'date-fns/locale';
+import {parse, type Locale} from 'date-fns';
 
 /**
  * https://date-fns.org/v4.1.0/docs/parse
