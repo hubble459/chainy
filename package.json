@@ -22,6 +22,7 @@
     "build": "bun run bun.build.ts && tsc --emitDeclarationOnly --project tsconfig.types.json"
   },
   "dependencies": {
+    "date-fns": "^4.1.0",
     "jquery": "^3.7.1",
     "jsdom": "^25.0.1"
   }
