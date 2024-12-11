@@ -26,7 +26,6 @@
     "noPropertyAccessFromIndexSignature": false,
     "noUncheckedIndexedAccess": true,
     "types": [
-      "@types/jquery",
       "@types/bun"
     ]
   },

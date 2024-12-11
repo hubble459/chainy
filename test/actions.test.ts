@@ -1,20 +1,17 @@
 import {describe, expect, test} from 'bun:test';
 import {readFileSync} from 'node:fs';
-import {JSDOM} from 'jsdom';
-import jQueryFactory from 'jquery';
 import {actions} from '../src/core/action';
 import {cast_date} from '../src/core/action/cast_date';
 import {abs_url} from '../src/core/action/abs_url';
 import {cast_relative_date} from '../src/core/action/cast_relative_date';
 import {fetch} from '../src/core/action/fetch';
-import {isJQueryStatic} from '../src/util';
+import {load} from 'cheerio';
 
 const {attribute, regex, select, text} = actions;
 
 describe('actions', () => {
     const html = readFileSync('./test/fragment/mangakakalot.html', 'utf-8');
-    const {window} = new JSDOM(html, {url: 'https://mangakakalot.com/manga/fm939336'}) as unknown as Window;
-    const $ = jQueryFactory(window, true);
+    const $ = load(html, {baseURI: 'https://mangakakalot.com/manga/fm939336'});
 
     test('select', () => {
         const element = select($, $, 'h1')[0];
@@ -78,6 +75,6 @@ describe('actions', () => {
         const element = await fetch($, 'https://example.com/');
 
         expect(element).not.toBeUndefined();
-        expect(isJQueryStatic(element)).toBe(true);
+        expect(element).toBeTypeOf('function');
     });
 });

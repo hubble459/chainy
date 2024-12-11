@@ -1,7 +1,9 @@
+import type {Cheerio} from 'cheerio';
 import {ActionError} from '../../error/action_error';
-import {allText, isJQuery, ownText} from '../../util';
+import {allText, isCheerio, ownText} from '../../util';
+import type {Element} from 'domhandler';
 
-export function text(context: any, value: JQuery | string | number | boolean | bigint | symbol | Date, text_type?: 'own' | 'all'): string {
+export function text(context: any, value: Cheerio<Element> | string | number | boolean | bigint | symbol | Date, text_type?: 'own' | 'all'): string {
     switch (typeof value) {
         case 'string':
             return value;
@@ -16,9 +18,10 @@ export function text(context: any, value: JQuery | string | number | boolean | b
 
         case 'object':
         case 'function':
-            if (isJQuery(value)) {
-                return (text_type === 'own' ? ownText(value) : allText(value)) as string;
+            if (isCheerio(value)) {
+                return (text_type === 'own' ? ownText(value) : allText(value));
             }
+
             break;
 
         default:

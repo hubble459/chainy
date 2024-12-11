@@ -1,4 +1,7 @@
-export function attribute(context: any, value: JQuery, attributes: string | string[]) {
+import type {Cheerio, CheerioAPI} from 'cheerio';
+import type {Element} from 'domhandler';
+
+export function attribute(context: CheerioAPI, value: Cheerio<Element>, attributes: string | string[]) {
     if (typeof attributes === 'string') {
         attributes = [attributes];
     }

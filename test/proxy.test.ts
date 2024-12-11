@@ -1,13 +1,11 @@
 import {describe, expect, test} from 'bun:test';
 import {readFileSync} from 'node:fs';
-import {JSDOM} from 'jsdom';
-import jQueryFactory from 'jquery';
 import {chainy} from '../src/core/chainy_proxy';
+import {load} from 'cheerio';
 
 describe('chain proxy', () => {
     const html = readFileSync('./test/fragment/mangakakalot.html', 'utf-8');
-    const {window} = new JSDOM(html) as unknown as Window;
-    const $ = jQueryFactory(window, true);
+    const $ = load(html, {baseURI: 'https://mangakakalot.com/manga/fm939336'});
 
     test('select > text', () => {
         const result = chainy()
