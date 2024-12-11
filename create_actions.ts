@@ -11,9 +11,9 @@ export type Actions = typeof actions;
 export type GetOptions<K extends keyof Actions> = Actions[K] extends Action<any, any, infer Options> ? Options : [];
 export type GetType<K extends keyof Actions, Value, Context> =
     {{generics}}
-        : Actions[K] extends Action<Context, Value extends unknown[] ? Value[number] : Value, any, infer Return>
-            ? Value extends unknown[] ? Return[] : Return
-            : Actions[K] extends Action<Context, Value, any, infer Return>
+        : Actions[K] extends Action<Context, Awaited<Value> extends unknown[] ? Awaited<Value>[number] : Awaited<Value>, any, infer Return>
+            ? Awaited<Value> extends unknown[] ? Return[] : Return
+            : Actions[K] extends Action<Context, Awaited<Value>, any, infer Return>
                 ? Return
                 : never;
 export type PossibleActions<Context, Input> = {[K in keyof Actions as GetType<K, Input, Context> extends never ? never : K]: K};`;

@@ -6,6 +6,8 @@ import {actions} from '../src/core/action';
 import {cast_date} from '../src/core/action/cast_date';
 import {abs_url} from '../src/core/action/abs_url';
 import {cast_relative_date} from '../src/core/action/cast_relative_date';
+import {fetch} from '../src/core/action/fetch';
+import {isJQueryStatic} from '../src/util';
 
 const {attribute, regex, select, text} = actions;
 
@@ -70,5 +72,12 @@ describe('actions', () => {
         const element = abs_url($, '/index.html');
 
         expect(element).toBe('https://mangakakalot.com/index.html');
+    });
+
+    test('fetch', async () => {
+        const element = await fetch($, 'https://example.com/');
+
+        expect(element).not.toBeUndefined();
+        expect(isJQueryStatic(element)).toBe(true);
     });
 });

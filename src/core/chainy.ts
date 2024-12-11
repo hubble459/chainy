@@ -34,8 +34,7 @@ export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown>
         if (typeof action === 'function') {
             this.items.push(action(new Chainy('or')));
         } else {
-            // @ts-expect-error spread argument not allowed?!
-            this.items.push(new Chainy('or').add(action, ...options));
+            this.items.push(new Chainy('or').add(action as any, ...options));
         }
 
         return this;
@@ -67,8 +66,9 @@ export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown>
                     }
                 }
                 if (allowed_to_fail) {
-                    let n;
-                    while ((n = this.items[i + 1]) && n instanceof Chainy && n.type === 'or') {
+                    let next_next;
+                    // Skip all following actions which are 'or'
+                    while ((next_next = this.items[i + 1]) && next_next instanceof Chainy && next_next.type === 'or') {
                         i++;
                     }
                 }

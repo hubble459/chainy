@@ -9,7 +9,6 @@ describe('manga', () => {
     const {window} = new JSDOM(html) as unknown as Window;
     const $ = jQueryFactory(window, true);
 
-
     test('select > text', () => {
         const first_text_trim = (chain: Chainy<JQueryStatic, JQuery[]>) => chain.add('first').add('text').add('trim');
 

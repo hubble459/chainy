@@ -14,20 +14,21 @@ import {trim} from './trim';
 import {attribute} from './attribute';
 import {matches} from './matches';
 import {cast_relative_date} from './cast_relative_date';
+import {fetch} from './fetch';
 import {first} from './array/first';
 import {join} from './array/join';
 import {divide} from './array/divide';
 
-export const actions = {cast_float, cast_date, cast_int, regex, abs_url, select, value, text, split, select_first, trim, attribute, matches, cast_relative_date, first, join, divide};
+export const actions = {cast_float, cast_date, cast_int, regex, abs_url, select, value, text, split, select_first, trim, attribute, matches, cast_relative_date, fetch, first, join, divide};
 
 export type Action<Context = any, Value = any, Options extends any[] = any[], Return = any> = (context: NonNullable<Context>, value: Value, ...options: Options) => Return;
 export type Actions = typeof actions;
 export type GetOptions<K extends keyof Actions> = Actions[K] extends Action<any, any, infer Options> ? Options : [];
 export type GetType<K extends keyof Actions, Value, Context> =
     K extends 'first' ? Value extends unknown[] ? ReturnType<typeof first<Value>> : never
-        : Actions[K] extends Action<Context, Value extends unknown[] ? Value[number] : Value, any, infer Return>
-            ? Value extends unknown[] ? Return[] : Return
-            : Actions[K] extends Action<Context, Value, any, infer Return>
+        : Actions[K] extends Action<Context, Awaited<Value> extends unknown[] ? Awaited<Value>[number] : Awaited<Value>, any, infer Return>
+            ? Awaited<Value> extends unknown[] ? Return[] : Return
+            : Actions[K] extends Action<Context, Awaited<Value>, any, infer Return>
                 ? Return
                 : never;
 export type PossibleActions<Context, Input> = {[K in keyof Actions as GetType<K, Input, Context> extends never ? never : K]: K};
