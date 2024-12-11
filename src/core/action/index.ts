@@ -5,6 +5,7 @@ import {cast_date} from './cast_date';
 import {cast_int} from './cast_int';
 import {regex} from './regex';
 import {abs_url} from './abs_url';
+import {value_string} from './value_string';
 import {select} from './select';
 import {value} from './value';
 import {text} from './text';
@@ -19,7 +20,7 @@ import {first} from './array/first';
 import {join} from './array/join';
 import {divide} from './array/divide';
 
-export const actions = {cast_float, cast_date, cast_int, regex, abs_url, select, value, text, split, select_first, trim, attribute, matches, cast_relative_date, fetch, first, join, divide};
+export const actions = {cast_float, cast_date, cast_int, regex, abs_url, value_string, select, value, text, split, select_first, trim, attribute, matches, cast_relative_date, fetch, first, join, divide};
 
 export type Action<Context = any, Value = any, Options extends any[] = any[], Return = any> = (context: NonNullable<Context>, value: Value, ...options: Options) => Return;
 export type Actions = typeof actions;

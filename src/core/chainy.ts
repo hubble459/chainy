@@ -6,8 +6,9 @@ interface ChainyAction<K extends keyof Actions> {
 }
 
 type ChainCallback<Context, Value, Output extends Chainy<any>> = (chain: Chainy<Context, Value>) => Output;
+type IsPromise<Yes, Value> = Yes extends true ? true : Value extends Promise<any> ? true : false;
 
-export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown> {
+export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown, Async = false> {
     private readonly type: 'or' | 'and' = 'and';
 
     public readonly items: (ChainyAction<keyof Actions> | Chainy<unknown>)[] = [];
@@ -16,9 +17,9 @@ export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown>
         this.type = type;
     }
 
-    public add<V>(chain_clojure: ChainCallback<Context, Value, Chainy<Context, V>>): Chainy<Context, V, Value>;
-    public add<K extends keyof PossibleActions<Context, Value>>(action: K, ...options: GetOptions<K>): Chainy<Context, GetType<K, Value, any>, Value>;
-    public add(action: keyof Actions | ChainCallback<Context, Value, any>, ...options: any[]): this {
+    public add<V>(chain_clojure: ChainCallback<Context, Value, Chainy<Context, V>>): Chainy<Context, V, Value, IsPromise<Async, Value>>;
+    public add<K extends keyof PossibleActions<Context, Value>>(action: K, ...options: GetOptions<K>): Chainy<Context, GetType<K, Value, any>, Value, IsPromise<Async, Value>>;
+    public add(action: keyof Actions | ChainCallback<Context, Value, any>, ...options: any[]): any {
         if (typeof action === 'function') {
             this.items.push(action(new Chainy('and')));
         } else {
@@ -28,9 +29,9 @@ export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown>
         return this;
     }
 
-    public or<V>(chain_clojure: ChainCallback<Context, Previous, Chainy<Context, V>>): Chainy<Context, Value | V, Previous>;
-    public or<K extends keyof PossibleActions<Context, Previous>>(action: K, ...options: GetOptions<K>): Chainy<Context, GetType<K, Previous, any> | Value, Previous>;
-    public or(action: keyof Actions | ChainCallback<Context, any, any>, ...options: any[]): this {
+    public or<V>(chain_clojure: ChainCallback<Context, Previous, Chainy<Context, V>>): Chainy<Context, Value | V, Previous, IsPromise<Async, Value>>;
+    public or<K extends keyof PossibleActions<Context, Previous>>(action: K, ...options: GetOptions<K>): Chainy<Context, GetType<K, Previous, any> | Value, Previous, IsPromise<Async, Value>>;
+    public or(action: keyof Actions | ChainCallback<Context, any, any>, ...options: any[]): any {
         if (typeof action === 'function') {
             this.items.push(action(new Chainy('or')));
         } else {
@@ -40,32 +41,60 @@ export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown>
         return this;
     }
 
-    public run(input: Context, value?: any): Value {
+    private run_action(input: Context, value: any, item: typeof this.items[number]) {
+        if (item instanceof Chainy) {
+            return item.run(input, value);
+        }
+
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        item.options ??= [];
+        const action = actions[item.action] as Action;
+
+        // @ts-expect-error expect_array is not a field
+        if (Array.isArray(value) && !action.expect_array) {
+            return value.map(v => action(input, v, ...item.options));
+        }
+
+        return action(input, value, ...item.options);
+    }
+
+    public run(input: Context, value: any = undefined): Async extends true ? Promise<Value> : Value {
         for (let i = 0; i < this.items.length; i++) {
             const item = this.items[i]!;
             const next = this.items[i + 1];
 
-            const allowed_to_fail = next instanceof Chainy && next.type === 'or';
+            const next_is_or = next instanceof Chainy && next.type === 'or';
 
             try {
-                if (item instanceof Chainy) {
-                    value = item.run(input, value);
-                } else {
-                    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-                    item.options ??= [];
-                    const action = actions[item.action] as Action;
-                    if (Array.isArray(value)) {
-                        // @ts-expect-error expect_array is not a field
-                        if (action.expect_array) {
-                            value = action(input, value, ...item.options);
-                        } else {
-                            value = value.map(v => action(input, v, ...item.options));
-                        }
-                    } else {
-                        value = action(input, value, ...item.options);
-                    }
+                value = this.run_action(input, value, item);
+
+                if (value instanceof Promise) {
+                    return value
+                        .then((v) => {
+                            if (next_is_or) {
+                                let next_next;
+                                // Skip all following actions which are 'or'
+                                while ((next_next = this.items[i + 1]) && next_next instanceof Chainy && next_next.type === 'or') {
+                                    i++;
+                                }
+                            }
+
+                            const async_chain = new Chainy<Context>();
+                            async_chain.items.push(...this.items.slice(i + 1));
+                            return async_chain.run(input, v);
+                        })
+                        .catch((e: unknown) => {
+                            if (!next_is_or) {
+                                throw e;
+                            }
+
+                            const async_chain = new Chainy<Context>();
+                            async_chain.items.push(...this.items.slice(i + 1));
+                            return async_chain.run(input, value);
+                        }) as any;
                 }
-                if (allowed_to_fail) {
+
+                if (next_is_or) {
                     let next_next;
                     // Skip all following actions which are 'or'
                     while ((next_next = this.items[i + 1]) && next_next instanceof Chainy && next_next.type === 'or') {
@@ -74,7 +103,7 @@ export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown>
                 }
                 // console.log(`Action (${'action' in item ? item.action : item.toString()}) got value ${JSON.stringify(value)}`);
             } catch (e) {
-                if (allowed_to_fail) {
+                if (next_is_or) {
                     // console.log(`Failed action (${'action' in item ? item.action : item.toString()}) but continuing to next`);
                 } else {
                     throw e;

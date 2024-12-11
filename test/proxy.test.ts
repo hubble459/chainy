@@ -105,4 +105,50 @@ describe('chain proxy', () => {
 
         expect(result).toEqual('Lord of Destiny Wheel');
     });
+
+
+    test('async chain', async () => {
+        const result = chainy()
+            .select_first('h1')
+            .text()
+            .value_string('https://example.com')
+            .fetch()
+            .select('h1')
+            .first()
+            .text()
+            .run($);
+
+        expect(result).toBeInstanceOf(Promise);
+        expect(await result).toEqual('Example Domain');
+    });
+
+
+    test('async chain with error', () => {
+        const result = chainy()
+            .select_first('h1')
+            .text()
+            .value_string('https://example.com')
+            .fetch()
+            .select('h2')
+            .first()
+            .text()
+            .run($);
+
+        expect(result).toBeInstanceOf(Promise);
+        expect(result).rejects.toThrow('No elements found');
+    });
+
+    test('async chain with error before async', () => {
+        const result = chainy()
+            .select_first('#hamburger')
+            .text()
+            .fetch()
+            .select('h2')
+            .first()
+            .text();
+
+        // Does not throw inside a Promise, but if used inside a promise function
+        // the result is the same
+        expect((async () => await result.run($))()).rejects.toThrow('No elements found');
+    });
 });
