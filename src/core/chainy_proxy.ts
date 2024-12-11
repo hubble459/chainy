@@ -11,7 +11,7 @@ type ChainyProxy<Context = CheerioAPI, Value = Context, Previous = unknown, Asyn
 } & {
     add<V>(closure: (chainy: ChainyProxy<Context, Value, Previous>) => ChainyProxy<unknown, V>): ChainyProxy<Context, V, Value, IsPromise<Async, Value>>;
     or<V>(closure: (chainy: ChainyProxy<Context, Previous, Previous>) => ChainyProxy<unknown, V>): ChainyProxy<Context, V | Value, Previous, IsPromise<Async, V>>;
-    toChainy(): Chainy<Context, Value, Previous>;
+    toChainy(): Chainy<Context, Value, Previous, Async>;
     run(input: Context): Async extends true ? Promise<Value> : Value;
 } & Omit<Chainy, 'add' | 'or'>;
 
