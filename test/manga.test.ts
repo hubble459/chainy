@@ -1,16 +1,15 @@
 import {describe, expect, test} from 'bun:test';
 import {readFileSync} from 'node:fs';
-import {JSDOM} from 'jsdom';
-import jQueryFactory from 'jquery';
 import {Chainy} from '../src/core/chainy';
+import {load, type Cheerio, type CheerioAPI} from 'cheerio';
+import type {Element} from 'domhandler';
 
 describe('manga', () => {
     const html = readFileSync('./test/fragment/mangakakalot.html', 'utf-8');
-    const {window} = new JSDOM(html) as unknown as Window;
-    const $ = jQueryFactory(window, true);
+    const $ = load(html, {baseURI: 'https://mangakakalot.com/manga/fm939336'});
 
     test('select > text', () => {
-        const first_text_trim = (chain: Chainy<JQueryStatic, JQuery[]>) => chain.add('first').add('text').add('trim');
+        const first_text_trim = (chain: Chainy<CheerioAPI, Cheerio<Element>[]>) => chain.add('first').add('text').add('trim');
 
         const manga_builder = {
             title: new Chainy()

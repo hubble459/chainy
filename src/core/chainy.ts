@@ -1,3 +1,4 @@
+import type {CheerioAPI} from 'cheerio';
 import {actions, type Action, type Actions, type GetOptions, type GetType, type PossibleActions} from './action';
 
 interface ChainyAction<K extends keyof Actions> {
@@ -8,7 +9,7 @@ interface ChainyAction<K extends keyof Actions> {
 type ChainCallback<Context, Value, Output extends Chainy<any>> = (chain: Chainy<Context, Value>) => Output;
 type IsPromise<Yes, Value> = Yes extends true ? true : Value extends Promise<any> ? true : false;
 
-export class Chainy<Context = JQueryStatic, Value = Context, Previous = unknown, Async = false> {
+export class Chainy<Context = CheerioAPI, Value = Context, Previous = unknown, Async = false> {
     private readonly type: 'or' | 'and' = 'and';
 
     public readonly items: (ChainyAction<keyof Actions> | Chainy<unknown>)[] = [];

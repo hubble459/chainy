@@ -1,9 +1,10 @@
+import type {CheerioAPI} from 'cheerio';
 import {actions, type GetOptions, type GetType, type PossibleActions} from './action';
 import {Chainy} from './chainy';
 
 type IsPromise<Yes, Value> = Yes extends true ? true : Value extends Promise<any> ? true : false;
 
-type ChainyProxy<Context = JQueryStatic, Value = Context, Previous = unknown, Async = false> = {
+type ChainyProxy<Context = CheerioAPI, Value = Context, Previous = unknown, Async = false> = {
     [K in keyof PossibleActions<Context, Value>]: (...options: GetOptions<K>) => ChainyProxy<Context, GetType<K, Value, Context>, Value, IsPromise<Async, GetType<K, Value, Context>>>;
 } & {
     [K in keyof PossibleActions<Context, Previous> as `or_${K}`]: (...options: GetOptions<K>) => ChainyProxy<Context, Value | GetType<K, Previous, Context>, Previous, IsPromise<Async, GetType<K, Previous, Context>>>;
@@ -14,7 +15,7 @@ type ChainyProxy<Context = JQueryStatic, Value = Context, Previous = unknown, As
     run(input: Context): Async extends true ? Promise<Value> : Value;
 } & Omit<Chainy, 'add' | 'or'>;
 
-export function chainy<Context = JQueryStatic, Value = Context, Previous = unknown, Async = false>(type: 'and' | 'or' = 'and'): ChainyProxy<Context, Value, Previous, Async> {
+export function chainy<Context = CheerioAPI, Value = Context, Previous = unknown, Async = false>(type: 'and' | 'or' = 'and'): ChainyProxy<Context, Value, Previous, Async> {
     const chain = new Chainy(type);
 
     const or = chain.or.bind(chain);

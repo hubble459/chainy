@@ -26,7 +26,6 @@
     "noUncheckedIndexedAccess": true,
 
     "types": [
-      "@types/jquery",
       "@types/bun"
     ]
   }
