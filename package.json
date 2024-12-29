@@ -26,6 +26,7 @@
     "axios-cache-interceptor": "^1.6.2",
     "cheerio": "^1.0.0",
     "date-fns": "^4.1.0",
+    "devalue": "^5.1.1",
     "domhandler": "^5.0.3",
     "parse-human-relative-time": "^3.0.2"
   }

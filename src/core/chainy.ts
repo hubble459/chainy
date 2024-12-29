@@ -1,5 +1,6 @@
 import type {CheerioAPI} from 'cheerio';
 import {actions, type Action, type Actions, type GetOptions, type GetType, type PossibleActions} from './action';
+import * as devalue from 'devalue';
 
 interface ChainyAction<K extends keyof Actions> {
     action: K;
@@ -102,7 +103,6 @@ export class Chainy<Context = CheerioAPI, Value = Context, Previous = unknown, A
                         i++;
                     }
                 }
-                // console.log(`Action (${'action' in item ? item.action : item.toString()}) got value ${JSON.stringify(value)}`);
             } catch (e) {
                 if (next_is_or) {
                     // console.log(`Failed action (${'action' in item ? item.action : item.toString()}) but continuing to next`);
@@ -116,35 +116,36 @@ export class Chainy<Context = CheerioAPI, Value = Context, Previous = unknown, A
     }
 
     public toObject(): any {
-        if (!('toJSON' in RegExp.prototype)) {
-            // @ts-expect-error toJSON does not exist on RegExp
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            RegExp.prototype.toJSON = RegExp.prototype.toString;
-        }
+        return {
+            type: this.type,
+            items: this.items.map((v) => {
+                if (v instanceof Chainy) {
+                    return v.toObject();
+                }
 
-        return JSON.parse(JSON.stringify(this));
+                return v;
+            }),
+        };
     }
 
     public toString(): string {
-        if (!('toJSON' in RegExp.prototype)) {
-            // @ts-expect-error toJSON does not exist on RegExp
-            // eslint-disable-next-line @typescript-eslint/unbound-method
-            RegExp.prototype.toJSON = RegExp.prototype.toString;
-        }
-
         return 'chain:' + this.items.map((v) => {
             if (v instanceof Chainy) {
                 return v.toString();
             } else if (v.options.length) {
-                return v.action + '(' + JSON.stringify(v.options) + ')';
+                return v.action + '(' + devalue.stringify(v.options) + ')';
             }
             return v.action;
         }).join('>>');
     }
 
+    public stringify() {
+        return devalue.stringify(this.toObject());
+    }
+
     static fromJSON(json: unknown): Chainy {
         if (typeof json === 'string') {
-            json = JSON.parse(json);
+            json = devalue.parse(json);
         }
 
         if (!json || typeof json !== 'object' || !('items' in json) || !('type' in json) || !Array.isArray(json.items)) {

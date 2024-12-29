@@ -8,7 +8,7 @@ describe('serialize', () => {
             .add('first')
             .add('text');
 
-        expect(JSON.parse(JSON.stringify(chain))).toEqual({
+        expect(chain.toObject()).toEqual({
             type: 'and',
             items: [
                 {action: 'select', options: ['h1']},
@@ -30,10 +30,27 @@ describe('serialize', () => {
             .add('first')
             .add('text');
 
-        const json = JSON.stringify(chain);
+        const json = chain.stringify();
 
         const parsed = Chainy.fromJSON(json);
 
-        expect(JSON.stringify(parsed)).toEqual(json);
+        expect(parsed.stringify()).toEqual(json);
+    });
+
+    test('to string', () => {
+        const chain = new Chainy()
+            .add('select', 'h1')
+            .or(chain => chain.add('select', 'h2'))
+            .or(chain => chain.add('select', 'h3'))
+            .or(chain => chain.add('select', 'h3').add('first'))
+            .or(chain => chain
+                .add('select', 'h3')
+                .or(chain => chain.add('select', 'h4')))
+            .add('first')
+            .add('text');
+
+        const string = chain.toString();
+
+        expect(string).toEqual('chain:select([[1],"h1"])>>chain:select([[1],"h2"])>>chain:select([[1],"h3"])>>chain:select([[1],"h3"])>>first>>chain:select([[1],"h3"])>>chain:select([[1],"h4"])>>first>>text');
     });
 });
