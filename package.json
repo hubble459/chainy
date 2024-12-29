@@ -2,6 +2,7 @@
   "name": "chainy",
   "module": "out/index.js",
   "main": "out/index.js",
+  "types": "out/index.d.ts",
   "type": "module",
   "devDependencies": {
     "@eslint/js": "^9.15.0",
@@ -18,7 +19,7 @@
     "start": "bun src/index.ts",
     "test": "bun test",
     "lint": "bun eslint",
-    "build": "bun build ./src/index.ts --target=bun > out/index.js && tsc --emitDeclarationOnly --project tsconfig.types.json"
+    "build": "bun build ./src/index.ts --target=browser > out/index.js && tsc --emitDeclarationOnly --project tsconfig.types.json"
   },
   "dependencies": {
     "axios": "^1.7.9",
