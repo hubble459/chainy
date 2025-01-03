@@ -50,7 +50,11 @@ export class Chainy<Context = CheerioAPI, Value = Context, Previous = unknown, A
 
         // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
         item.options ??= [];
-        const action = actions[item.action] as Action;
+        const action = actions[item.action] as Action | undefined;
+
+        if (!action) {
+            throw new Error(`Action ${item.action} not found!`);
+        }
 
         // @ts-expect-error expect_array is not a field
         if (Array.isArray(value) && !action.expect_array) {
